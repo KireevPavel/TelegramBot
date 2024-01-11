@@ -11,7 +11,7 @@ name = None
 phone = None
 date = None
 id = None
-
+price = types.LabeledPrice(label='Курс по программированию', amount= 10 * 100)
 userAct = '0'
 
 db = sqlite3.connect('Users.db', check_same_thread=False)
@@ -42,7 +42,26 @@ def getName(message):
     name = message.text.strip()
     bot.send_message(message.chat.id, 'Введите контактный номер телефона')
     bot.register_next_step_handler(message, getPhone)
-
+def pay(message):
+    if config.PAYMENT_TOKEN.split(':')[1] == 'TEST':
+        bot.send_message(message.chat.id, 'Тестовый платеж')
+    bot.send_invoice(message.chat.id,
+                     title = 'Курс по Python',
+                     description = 'Оплата курса по pythone на месяц',
+                     provider_token=config.PAYMENT_TOKEN,
+                     currency='rub',
+                     photo_url='https://img.freepik.com/free-vector/programming-concept-illustration_114360-1670.jpg?size=626&ext=jpg&ga=GA1.1.898993043.1705044857&semt=ais',
+                     photo_width=416,
+                     photo_height=234,
+                     photo_size=416,
+                     is_flexible=False,
+                     prices=[price],
+                     start_parameter='one-month',
+                     invoice_payload='test-invoice-payload'
+                     )
+@bot.pre_checkout_query_handler(lambda query: True)
+def pre_checkout_query(pre_checkout_q : types.PreCheckoutQuery):
+    bot.answer_pre_checkout_query(pre_checkout_q.id, ok=True)
 
 def getPhone(message):
     global phone
@@ -64,7 +83,7 @@ def getDate(message):
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     button1 = types.KeyboardButton("Подробнее о нас")
-    button2 = types.KeyboardButton("Изменить запись")
+    button2 = types.KeyboardButton("Записаться")
     button3 = types.KeyboardButton("Оплатить курс")
     markup.add(button1, button2, button3)
     bot.send_message(message.chat.id,
@@ -72,13 +91,6 @@ def getDate(message):
                      reply_markup=markup)
 
 
-# @bot.message_handler(commands=['pay'])
-# def pay(message):
-#     bot.send_message(message.chat.id,'Покупка курса','Покупка курса по программиранию','invoice', config.PAYMENT_TOKEN, 'RUB',[types.LabeledPrice('Покупка курса',500)] )
-
-@bot.message_handler(commands=['test'])
-def test(message):
-    bot.send_message(message.chat.id,"test")
 
 @bot.message_handler()
 def start(message):
@@ -138,6 +150,8 @@ def start(message):
                          "На первом бесплатном занятии Вы узнаете больше о нашей школе и сможете задать вопросы напрямую преподавателю. А ребенок уже создаст первый мини-проект 🔥 ".format(
                              message.from_user),
                          reply_markup=markup1)
+    elif message.text.lower() == 'оплатить курс':
+        pay(message)
 
 
 
