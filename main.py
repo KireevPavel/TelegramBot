@@ -11,7 +11,9 @@ name = None
 phone = None
 date = None
 id = None
-price = types.LabeledPrice(label='Курс по программированию', amount= 10 * 100)
+pricePython = types.LabeledPrice(label='Курс по программированию на Python', amount= 5000 * 100)
+priceJava = types.LabeledPrice(label='Курс по программированию на Java', amount= 5000 * 100)
+priceHTML = types.LabeledPrice(label='Курс по программированию на HTML', amount= 5000 * 100)
 userAct = '0'
 
 db = sqlite3.connect('Users.db', check_same_thread=False)
@@ -42,20 +44,50 @@ def getName(message):
     name = message.text.strip()
     bot.send_message(message.chat.id, 'Введите контактный номер телефона')
     bot.register_next_step_handler(message, getPhone)
-def pay(message):
-    if config.PAYMENT_TOKEN.split(':')[1] == 'TEST':
-        bot.send_message(message.chat.id, 'Тестовый платеж')
+def payPython(message):
     bot.send_invoice(message.chat.id,
                      title = 'Курс по Python',
-                     description = 'Оплата курса по pythone на месяц',
+                     description = 'Оплата курса по Python на месяц',
                      provider_token=config.PAYMENT_TOKEN,
                      currency='rub',
-                     photo_url='https://img.freepik.com/free-vector/programming-concept-illustration_114360-1670.jpg?size=626&ext=jpg&ga=GA1.1.898993043.1705044857&semt=ais',
+                     photo_url='https://img.freepik.com/premium-photo/school-kid-holding-index-finger-up-with-great-new-idea-nerd-pupil-boy-from-elementary-school_545934-43036.jpg?size=626&ext=jpg&ga=GA1.1.898993043.1705044857&semt=ais',
                      photo_width=416,
                      photo_height=234,
                      photo_size=416,
                      is_flexible=False,
-                     prices=[price],
+                     prices=[pricePython],
+                     start_parameter='one-month',
+                     invoice_payload='test-invoice-payload'
+                     )
+
+def payJava(message):
+    bot.send_invoice(message.chat.id,
+                     title = 'Курс по Java',
+                     description = 'Оплата курса по Java на месяц',
+                     provider_token=config.PAYMENT_TOKEN,
+                     currency='rub',
+                     photo_url='https://img.freepik.com/premium-photo/smart-boy-in-a-blue-t-shirt-thinking-holding-a-laptop-in-his-hands-on-yellow_88135-20272.jpg?size=626&ext=jpg&ga=GA1.1.898993043.1705044857&semt=ais',
+                     photo_width=416,
+                     photo_height=234,
+                     photo_size=416,
+                     is_flexible=False,
+                     prices=[priceJava],
+                     start_parameter='one-month',
+                     invoice_payload='test-invoice-payload'
+                     )
+
+def payHTML(message):
+    bot.send_invoice(message.chat.id,
+                     title = 'Курс по HTML',
+                     description = 'Оплата курса по HTML на месяц',
+                     provider_token=config.PAYMENT_TOKEN,
+                     currency='rub',
+                     photo_url='https://img.freepik.com/premium-photo/smart-schoolboy-with-a-laptop-on-a-yellow-background_88135-13403.jpg?size=626&ext=jpg&ga=GA1.1.898993043.1705044857&semt=ais',
+                     photo_width=416,
+                     photo_height=234,
+                     photo_size=416,
+                     is_flexible=False,
+                     prices=[priceHTML],
                      start_parameter='one-month',
                      invoice_payload='test-invoice-payload'
                      )
@@ -151,7 +183,9 @@ def start(message):
                              message.from_user),
                          reply_markup=markup1)
     elif message.text.lower() == 'оплатить курс':
-        pay(message)
+        payPython(message)
+        payJava(message)
+        payHTML(message)
 
 
 
