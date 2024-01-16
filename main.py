@@ -141,6 +141,9 @@ def menu(message):
 
 @bot.message_handler(commands=['start'])
 def start(message):
+    global id
+    id = message.from_user.id
+
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("Подробнее о нас", callback_data='inf'))
     markup.add(types.InlineKeyboardButton("Записаться", callback_data='reg'))
@@ -153,53 +156,55 @@ def start(message):
 
 @bot.callback_query_handler(func=lambda callback: True)
 def callbackMessage(callback):
-    if callback.data == 'reg':
-        global id
-        id = callback.message.from_user.id
-        sql.execute(f"SELECT id FROM users WHERE id = '{id}'")
-        if sql.fetchone() is None:
-            sql.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)", (id, "0", "0", "0", "new", "0"))
-            db.commit()
-        userAct = sql.execute(f"SELECT act FROM Users WHERE id = '{id}'").fetchone()[0]
-        if userAct == "new":
-            signUp(callback.message)
-        elif userAct == "full":
+    global id
+    if id == None:
+        bot.send_message(callback.message.chat.id,"Для того чтобы начать диалог введите команду /start")
+    else:
+        if callback.data == 'reg':
+            sql.execute(f"SELECT id FROM users WHERE id = '{id}'")
+            if sql.fetchone() is None:
+                sql.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)", (id, "0", "0", "0", "new", "0"))
+                db.commit()
+            userAct = sql.execute(f"SELECT act FROM Users WHERE id = '{id}'").fetchone()[0]
+            if userAct == "new":
+                signUp(callback.message)
+            elif userAct == "full":
+                markup = types.InlineKeyboardMarkup()
+                markup.add(types.InlineKeyboardButton("Изменить запись", callback_data='edit'))
+                markup.add(types.InlineKeyboardButton("Вернуться в главное меню", callback_data='menu'))
+                bot.send_message(callback.message.chat.id, 'Вы уже зарегистрированы. Желаете изменить запись?',
+                                 reply_markup=markup)
+
+        elif callback.data == 'inf':
             markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton("Изменить запись", callback_data='edit'))
+            markup.add(types.InlineKeyboardButton("Наш сайт", url='https://vk.link/qiwikids'))
             markup.add(types.InlineKeyboardButton("Вернуться в главное меню", callback_data='menu'))
-            bot.send_message(callback.message.chat.id, 'Вы уже зарегистрированы. Желаете изменить запись?',
+            bot.send_message(callback.message.chat.id,
+                             "QiwiKids – место, где дети и подростки получают навыки для успешного будущего и узнают всё "
+                             "о высоких технологиях. 😎\n"
+                             "Что умеют дети из QiwiKids?\n"
+                             "🟣Разрабатывать сайты, компьютерные игры и приложения.\n"
+                             "🟣Проектировать 3D-модели.\n"
+                             "🟣Писать чат-боты и работать в графических редакторах.\n"
+                             "Присоединиться к QiwiKids можно с любым уровнем знаний.\n"
+                             "На первом бесплатном занятии Вы узнаете больше о нашей школе и сможете задать вопросы "
+                             "напрямую преподавателю. А ребенок уже создаст первый мини-проект 🔥 ".format(
+                                 callback.message.from_user),
                              reply_markup=markup)
+        elif callback.data == 'menu':
+            menu(callback.message)
 
-    elif callback.data == 'inf':
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("Наш сайт", url='https://vk.link/qiwikids'))
-        markup.add(types.InlineKeyboardButton("Вернуться в главное меню", callback_data='menu'))
-        bot.send_message(callback.message.chat.id,
-                         "QiwiKids – место, где дети и подростки получают навыки для успешного будущего и узнают всё "
-                         "о высоких технологиях. 😎\n"
-                         "Что умеют дети из QiwiKids?\n"
-                         "🟣Разрабатывать сайты, компьютерные игры и приложения.\n"
-                         "🟣Проектировать 3D-модели.\n"
-                         "🟣Писать чат-боты и работать в графических редакторах.\n"
-                         "Присоединиться к QiwiKids можно с любым уровнем знаний.\n"
-                         "На первом бесплатном занятии Вы узнаете больше о нашей школе и сможете задать вопросы "
-                         "напрямую преподавателю. А ребенок уже создаст первый мини-проект 🔥 ".format(
-                             callback.message.from_user),
-                         reply_markup=markup)
-    elif callback.data == 'menu':
-        menu(callback.message)
+        elif callback.data == 'edit':
+            sql.execute(f"UPDATE Users SET act = 'new' WHERE id = {id}")
+            db.commit()
+            signUp(callback.message)
 
-    elif callback.data == 'edit':
-        id = callback.message.from_user.id
-        sql.execute(f"UPDATE Users SET act = 'new' WHERE id = {id}")
-        db.commit()
-        signUp(callback.message)
+        elif callback.data == 'pay':
+            payPython(callback.message)
+            payJava(callback.message)
+            payHTML(callback.message)
+            menu(callback.message)
 
-    elif callback.data == 'pay':
-        payPython(callback.message)
-        payJava(callback.message)
-        payHTML(callback.message)
-        menu(callback.message)
 
 
 bot.polling(non_stop=True)
